@@ -125,16 +125,21 @@ jobs:
         run: |
           echo "🔍 Building ${{ matrix.service }} for security scanning..."
           
-          # Determine correct build context and dockerfile
-          if [[ "${{ matrix.service }}" == "orchestration-service" ]]; then
-            BUILD_CONTEXT="./microservices"
-            DOCKERFILE_PATH="-f orchestration-service/Dockerfile"
+          # Check if service has Dockerfile
+          if [ -f "microservices/${{ matrix.service }}/Dockerfile" ]; then
+            echo "📦 Found Dockerfile for ${{ matrix.service }}"
+            docker build -t local-scan/${{ matrix.service }}:latest \
+              -f "microservices/${{ matrix.service }}/Dockerfile" \
+              "microservices/${{ matrix.service }}"
+          elif [ -f "microservices/${{ matrix.service }}/docker/Dockerfile" ]; then
+            echo "📦 Found base Dockerfile for ${{ matrix.service }} in docker/ folder"
+            docker build -t local-scan/${{ matrix.service }}:latest \
+              -f "microservices/${{ matrix.service }}/docker/Dockerfile" \
+              "microservices/${{ matrix.service }}"
           else
-            BUILD_CONTEXT="./microservices/${{ matrix.service }}"
-            DOCKERFILE_PATH=""
+            echo "⚠️ No Dockerfile found for ${{ matrix.service }}, skipping scan"
+            exit 0
           fi
-          
-          docker build -t local-scan/${{ matrix.service }}:latest $DOCKERFILE_PATH "$BUILD_CONTEXT"
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
