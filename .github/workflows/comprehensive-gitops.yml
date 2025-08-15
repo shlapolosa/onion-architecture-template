@@ -22,8 +22,17 @@ permissions:
   packages: write
 
 env:
-  REGISTRY: docker.io
-  REGISTRY_USERNAME: socrates12345
+  # Docker Hub settings (default)
+  DOCKERHUB_REGISTRY: docker.io  # Legacy - use DOCKERHUB_REGISTRY
+  DOCKERHUB_USERNAME: socrates12345
+  # ACR settings
+  ACR_REGISTRY: healthidpuaeacr.azurecr.io
+  ACR_NAME: healthidpuaeacr
+  # Default registry selection
+  DEFAULT_REGISTRY: dockerhub  # or "acr" or "both"
+  # Legacy variables for backward compatibility
+  REGISTRY: docker.io  # Legacy - use DOCKERHUB_REGISTRY
+  REGISTRY_USERNAME: socrates12345  # Legacy - use DOCKERHUB_USERNAME
   GITOPS_REPO: SERVICE_NAME_PLACEHOLDER-gitops
   GITOPS_BRANCH: main
 
