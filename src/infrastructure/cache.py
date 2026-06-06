@@ -17,6 +17,9 @@ class NullCache(Cache):
     def set(self, key: str, value: str, ttl_seconds: int = 300) -> None:
         return None
 
+    def delete(self, key: str) -> None:
+        return None
+
 
 class RedisCache(Cache):
     def __init__(self, url: str):
@@ -33,6 +36,12 @@ class RedisCache(Cache):
     def set(self, key: str, value: str, ttl_seconds: int = 300) -> None:
         try:
             self._r.setex(key, ttl_seconds, value)
+        except Exception:
+            pass
+
+    def delete(self, key: str) -> None:
+        try:
+            self._r.delete(key)
         except Exception:
             pass
 

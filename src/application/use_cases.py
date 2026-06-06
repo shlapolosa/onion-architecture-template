@@ -29,6 +29,7 @@ class CreateItem:
     def execute(self, name: str, description: str = "") -> Item:
         item = self._repo.add(Item(name=name, description=description))
         self._cache.set(f"item:{item.id}", item.model_dump_json())
+        self._cache.delete("items:all")  # list view changed
         return item
 
 
@@ -50,8 +51,16 @@ class GetItem:
 
 
 class ListItems:
-    def __init__(self, repo: ItemRepository):
+    """Cache-aside list (GETs are cached by default; short TTL + eviction on write)."""
+
+    def __init__(self, repo: ItemRepository, cache: Cache):
         self._repo = repo
+        self._cache = cache
 
     def execute(self) -> List[Item]:
-        return self._repo.list()
+        cached = self._cache.get("items:all")
+        if cached:
+            return [Item(**i) for i in json.loads(cached)]
+        items = self._repo.list()
+        self._cache.set("items:all", json.dumps([json.loads(i.model_dump_json()) for i in items]), ttl_seconds=60)
+        return items

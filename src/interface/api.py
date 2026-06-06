@@ -68,8 +68,9 @@ def get_get_item(repo: ItemRepository = Depends(_repository),
     return GetItem(repo, cache)
 
 
-def get_list_items(repo: ItemRepository = Depends(_repository)) -> ListItems:
-    return ListItems(repo)
+def get_list_items(repo: ItemRepository = Depends(_repository),
+                   cache: Cache = Depends(_cache)) -> ListItems:
+    return ListItems(repo, cache)
 
 
 # ---- Health ------------------------------------------------------------------

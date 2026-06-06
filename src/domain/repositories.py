@@ -30,3 +30,6 @@ class Cache(ABC):
 
     @abstractmethod
     def set(self, key: str, value: str, ttl_seconds: int = 300) -> None: ...
+
+    @abstractmethod
+    def delete(self, key: str) -> None: ...
