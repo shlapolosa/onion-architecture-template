@@ -25,6 +25,9 @@ def _database_url() -> str:
 class Settings:
     database_url: str = field(default_factory=_database_url)
     redis_url: str = field(default_factory=lambda: os.getenv("REDIS_URL") or os.getenv("CACHE_URL") or "")
+    jwt_issuer_uri: str = field(default_factory=lambda: os.getenv("JWT_ISSUER_URI", ""))
+    jwt_jwk_set_uri: str = field(default_factory=lambda: os.getenv("JWT_JWK_SET_URI", ""))
+    auth0_audience: str = field(default_factory=lambda: os.getenv("AUTH0_AUDIENCE", ""))
     port: int = field(default_factory=lambda: int(os.getenv("PORT", "8080")))
     service_name: str = "template-service"
 

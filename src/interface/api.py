@@ -8,12 +8,13 @@ Unbound = in-memory + no-op cache: the template runs anywhere.
 from functools import lru_cache
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 from ..application.use_cases import CreateItem, GetItem, ListItems
 from ..domain.models import Item
 from ..domain.repositories import Cache, ItemRepository
+from ..infrastructure.auth import get_verifier
 from ..infrastructure.cache import NullCache, get_cache
 from ..infrastructure.config import Settings, load_settings
 from ..infrastructure.database import get_engine
@@ -45,6 +46,16 @@ def _repository() -> ItemRepository:
 @lru_cache
 def _cache() -> Cache:
     return get_cache(_settings())
+
+
+@lru_cache
+def _verifier():
+    return get_verifier(_settings())
+
+
+def require_auth(request: Request):
+    """Identity binding: verifies Bearer JWT when `identity:` is bound; no-op when open."""
+    return _verifier().verify(request)
 
 
 def get_create_item(repo: ItemRepository = Depends(_repository),
@@ -113,17 +124,18 @@ class CreateItemRequest(BaseModel):
 
 
 @app.post("/items", response_model=Item, status_code=201)
-def create_item(req: CreateItemRequest, uc: CreateItem = Depends(get_create_item)):
+def create_item(req: CreateItemRequest, uc: CreateItem = Depends(get_create_item),
+                claims=Depends(require_auth)):
     return uc.execute(name=req.name, description=req.description)
 
 
 @app.get("/items", response_model=List[Item])
-def list_items(uc: ListItems = Depends(get_list_items)):
+def list_items(uc: ListItems = Depends(get_list_items), claims=Depends(require_auth)):
     return uc.execute()
 
 
 @app.get("/items/{item_id}", response_model=Item)
-def get_item(item_id: str, uc: GetItem = Depends(get_get_item)):
+def get_item(item_id: str, uc: GetItem = Depends(get_get_item), claims=Depends(require_auth)):
     item: Optional[Item] = uc.execute(item_id)
     if item is None:
         raise HTTPException(status_code=404, detail="item not found")
