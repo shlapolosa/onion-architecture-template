@@ -21,7 +21,7 @@ from ..infrastructure.database import get_engine
 from ..infrastructure.repositories import InMemoryItemRepository, SqlItemRepository
 
 app = FastAPI(
-    title="template-service",
+    title=load_settings().service_name,
     description="CLAUDE.md-compliant microservice with Onion Architecture",
     version="0.1.0",
 )
@@ -102,19 +102,19 @@ def _binding_status() -> dict:
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint for Kubernetes probes (always healthy; bindings reported)."""
-    return HealthResponse(status="healthy", service="template-service", **_binding_status())
+    return HealthResponse(status="healthy", service=_settings().service_name, **_binding_status())
 
 
 @app.get("/ready", response_model=HealthResponse)
 async def readiness_check():
     """Readiness check endpoint for Kubernetes probes"""
-    return HealthResponse(status="ready", service="template-service", **_binding_status())
+    return HealthResponse(status="ready", service=_settings().service_name, **_binding_status())
 
 
 @app.get("/")
 async def root():
     """Root endpoint"""
-    return {"message": "Hello from template-service", "architecture": "onion"}
+    return {"message": f"Hello from {_settings().service_name}", "architecture": "onion"}
 
 
 # ---- Sample vertical slice: /items -------------------------------------------

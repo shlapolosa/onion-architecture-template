@@ -29,7 +29,9 @@ class Settings:
     jwt_jwk_set_uri: str = field(default_factory=lambda: os.getenv("JWT_JWK_SET_URI", ""))
     auth0_audience: str = field(default_factory=lambda: os.getenv("AUTH0_AUDIENCE", ""))
     port: int = field(default_factory=lambda: int(os.getenv("PORT", "8080")))
-    service_name: str = "template-service"
+    # Knative injects K_SERVICE with the service name; falls back to the
+    # template default for local runs.
+    service_name: str = field(default_factory=lambda: os.getenv("K_SERVICE", "template-service"))
 
 
 def load_settings() -> Settings:
