@@ -38,8 +38,21 @@ class InMemoryItemRepository(ItemRepository):
 
 
 _metadata = MetaData()
+
+
+def _table_name() -> str:
+    """Service-scoped table: the platform default is ONE shared database per
+    OAM, so sibling services with a fixed "items" table would silently share
+    rows (caught patient5, 2026-06-07). K_SERVICE (injected by Knative) scopes
+    the table per service; bare "items" remains for local runs/tests."""
+    import os
+    import re
+    svc = os.getenv("K_SERVICE", "")
+    return re.sub(r"[^a-zA-Z0-9_]", "_", svc) + "_items" if svc else "items"
+
+
 _items_table = Table(
-    "items", _metadata,
+    _table_name(), _metadata,
     Column("id", String(36), primary_key=True),
     Column("name", String(255), nullable=False),
     Column("description", String(1024), nullable=False, default=""),
